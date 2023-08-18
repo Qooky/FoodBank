@@ -1,0 +1,132 @@
+CREATE TABLE `Supervisor` (
+  `Semp_id` int(10) REFERENCES Employee(`Emp_id`),
+  PRIMARY KEY (`Semp_id`));
+
+CREATE TABLE `Employee` (
+  `Emp_id` int(10) NOT NULL AUTO_INCREMENT,
+  `Fname` varchar(30) NOT NULL,
+  `Lname` varchar(30) NOT NULL,
+  `Semp_id` int(10),
+  `username` varchar(30) NOT NULL UNIQUE,
+  `password` varchar(30) NOT NULL,
+  `role` varchar(15) NOT NULL check (`role` in ('Supervisor', 'Front', 'Back')),
+   
+  PRIMARY KEY (`Emp_id`),
+  FOREIGN KEY (`Semp_id`) REFERENCES Supervisor(`Semp_id`));
+
+CREATE TABLE `Back_Employee` (
+  `Bemp_id` int(10) REFERENCES Employee(`Emp_id`),
+  PRIMARY KEY (`Bemp_id`));
+
+CREATE TABLE `Front_Employee` (
+  `Femp_id` int(10) REFERENCES Employee(`Emp_id`),
+  PRIMARY KEY (`Femp_id`));
+
+CREATE TABLE `Family` (
+	`Fam_id` int(10) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`Fam_id`));
+
+CREATE TABLE `Order` (
+  `Order_no` int(10) NOT NULL AUTO_INCREMENT,
+  `Picked_up` bit(1) NOT NULL,
+  `Bemp_id` int(10),
+  `type` varchar(15) NOT NULL check (`type` in ('Food', 'Clothe')),
+  `Ready_for_pick_up` bit(1) NOT NULL,
+   
+  PRIMARY KEY (`Order_no`),
+  FOREIGN KEY (`Bemp_id`) REFERENCES Back_Employee(`Bemp_id`));
+
+CREATE TABLE `F_Order` (
+  `Forder_no` int(10) NOT NULL REFERENCES `Order`(`Order_no`),
+  PRIMARY KEY (`Forder_no`));
+
+CREATE TABLE `C_Order` (
+  `Corder_no` int(10) NOT NULL REFERENCES `Order`(`Order_no`),
+  PRIMARY KEY (`Corder_no`));
+
+CREATE TABLE `Food_Inventory` (
+  `name` varchar(100) NOT NULL,
+  `qty` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`name`));
+
+CREATE TABLE `Food` (
+  `Food_id` varchar(40) NOT NULL UNIQUE,
+  `name` varchar(100) NOT NULL REFERENCES `food_inventory`(`name`),
+  `type` varchar(10) NOT NULL check (`type` in ('FV', 'Grain', 'Meat', 'Dairy', 'Other')),
+  `calories` int unsigned NOT NULL,
+  `Forder_no` int(10),
+   
+  PRIMARY KEY (`name`, `Food_id`),
+  FOREIGN KEY (`Forder_no`) REFERENCES `F_Order`(`Forder_no`));
+
+CREATE TABLE `Clothing_Inventory` (
+  `type` varchar(100) NOT NULL,
+  `size` varchar(5) check (`size` in ('XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL')),
+  `gender` char(1) check (`gender` in ('M', 'F', 'U')),
+  `qty` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`type`, `size`, `gender`));
+
+CREATE TABLE `Clothe` (
+  `Clothe_id` varchar(40) NOT NULL UNIQUE,
+  `type` varchar(100) NOT NULL REFERENCES `clothing_inventory`(`type`),
+  `size` varchar(5) check (`size` in ('XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL')) REFERENCES `clothing_inventory`(`size`),
+  `gender` char(1) check (`gender` in ('M', 'F', 'U')) REFERENCES `clothing_inventory`(`gender`),
+  `description` varchar(100) NOT NULL,
+  `Corder_no` int(10),
+   
+  PRIMARY KEY (`type`, `size`, `gender`,`Clothe_id`),
+  FOREIGN KEY (`Corder_no`) REFERENCES `C_order`(`Corder_no`));
+
+CREATE TABLE `Replenish_C` (
+  `Semp_id` int(10) REFERENCES Supervisor(`Semp_id`),
+  `type` varchar(100) NOT NULL REFERENCES clothing_inventory(`type`),
+  `size` varchar(5) check (`size` in ('XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL')) REFERENCES clothing_inventory(`size`),
+  `gender` char(1) check (`gender` in ('M', 'F', 'U')) REFERENCES clothing_inventory(`gender`),
+  PRIMARY KEY (`Semp_id`, `type`, `size`, `gender`));
+
+CREATE TABLE `Child` (
+    `Fam_id` int(10) NOT NULL REFERENCES `family`(`Fam_id`),
+    `child_id` varchar(40) NOT NULL UNIQUE,
+    `cals_needed` int(10) NOT NULL,
+  PRIMARY KEY (`Fam_id`, `child_id`));
+
+CREATE TABLE `Adult` (
+    `Fam_id` int(10) NOT NULL REFERENCES `family`(`Fam_id`),
+    `adult_id` varchar(40) NOT NULL UNIQUE,
+    `cals_needed` int(10) NOT NULL,
+    `gender` char(1) NOT NULL check (`gender` in ('M', 'F')),
+  PRIMARY KEY (`Fam_id`, `adult_id`));
+
+CREATE TABLE `Replenish_F` (
+  `Semp_id` int(10) REFERENCES Supervisor(`Semp_id`),
+  `name` varchar(100) REFERENCES food_inventory(`name`), 
+  PRIMARY KEY (`Semp_id`, `name`));
+
+CREATE TABLE `F_Supplies` (
+  `Forder_no` int(10) NOT NULL REFERENCES `F_Order`(`Forder_no`),
+  `name` varchar(100) NOT NULL REFERENCES `food_inventory`(`name`),
+  PRIMARY KEY (`Forder_no`,`name`));
+
+CREATE TABLE `C_Supplies` (
+  `Corder_no` int(10) NOT NULL REFERENCES `C_order`(`Corder_no`),
+  `type` varchar(100) NOT NULL REFERENCES `clothing_inventory`(`type`),
+  `size` varchar(5) check (`size` in ('XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL')) REFERENCES `clothing_inventory`(`size`),
+  `gender` char(1) check (`gender` in ('M', 'F', 'U')) REFERENCES clothing_inventory(`gender`),
+  PRIMARY KEY (`Corder_no`,`type`,`size`,`gender`));
+
+CREATE TABLE `Orders` (
+  `Femp_id` int(10) NOT NULL REFERENCES `Front_Employee`(`Femp_id`),
+  `Order_no` int(10) NOT NULL REFERENCES `order`(`Order_no`),
+  `Fam_id` int(10) NOT NULL REFERENCES `family`(`Fam_id`),
+  `date` varchar(20) NOT NULL,
+  `time` varchar(20) NOT NULL,
+   
+  PRIMARY KEY (`Femp_id`, `Order_no`, `Fam_id`));
+
+
+
+
+
+
+
+
